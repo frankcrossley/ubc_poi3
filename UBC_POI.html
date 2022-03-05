@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>UBC Points of Interest</title>
+    <meta charset="utf-8" />
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+    <script src="./p5.min.js"></script>
+
+  <body>
+    <div id="mapid" style="width: 600px; height: 400px;"></div>
+    <div id="controls" style ="margin: 15px;">
+      <button id= "poi_button">Show Points of Interest</button>
+    </div>
+    <script>
+
+        var map = L.map('mapid',
+                        {
+          								center: [49.265637, -123.256113],
+          								zoom: 15
+        								}
+                  );
+
+      var topoTiles = L.tileLayer(
+          								'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+                          {
+      									}
+      								).addTo(map);
+
+        var POI_Options = {
+        	radius: 4,
+        	fillColor: "#03fcd3",
+        	color: "#000",
+        	weight: 1,
+        	opacity: 0.8,
+        	fillOpacity: 0.2
+      };
+
+        function EachPOI(feature, layer) {
+           if (feature.properties && feature.properties.PLACENAME) {
+              layer.bindTooltip(feature.properties.PLACENAME);
+           }
+        }
+
+        function POIPointToLayer(feature, latlng) {
+               return L.circleMarker(
+                 latlng,
+                 POI_Options
+               );
+             }
+
+      var POI_GeojsonData;
+
+      var lastLayerAdded = {};
+
+      function addPOIs() {
+        if (map.hasLayer(lastLayerAdded)) {
+         map.removeLayer(lastLayerAdded);
+       }
+        lastLayerAdded = L.geoJSON(POI_GeojsonData, {
+         pointToLayer: POIPointToLayer,
+         onEachFeature: EachPOI
+       });
+       lastLayerAdded.addTo(map);
+     };
+
+      $.getJSON("https://raw.githubusercontent.com/UBCGeodata/ubc-geospatial-opendata/master/ubcv/locations/geojson/ubcv_poi.geojson",
+        function(data) {
+          POI_GeojsonData = data;
+
+          document
+            .getElementById("poi_button")
+            .addEventListener("click", addPOIs);
+
+        }
+      );
+    </script>
+  </body>
+</html>
